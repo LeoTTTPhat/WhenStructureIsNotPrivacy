@@ -1,66 +1,75 @@
-# Structure-Aware Private Graph Release
+# When Structure Is Not Privacy — Source Code
 
-This repository contains the source code and experimental datasets for the paper *"When Structure is Not Privacy: Mapping the Link-Privacy/Structural-Utility Frontier"*.
+Reproduction code and cached data for the paper *"When Structure Is Not Privacy:
+A Degree-Channel Audit and Regularized Defense for Graph Release"* (IEEE TNSE).
 
-## Repository Structure
+The study audits how much link-privacy leaks through the **degree channel** of a
+released graph, and evaluates release mechanisms against that leakage: naive
+randomized response (edge-flip), a degree-preserving double-edge **swap**, the
+**TmF** regularized defense, and differentially private baselines (**dK-1 DP**,
+**dK-2 DP**), plus the DP-DRP composition. Everything is measured with four
+link-prediction attackers and a community-utility (NMI) metric on both synthetic
+generators and five real networks.
 
-The code spans several experiments evaluating different privacy-preserving graph release mechanisms, particularly focusing on our proposed **Degree-Preserving Randomized Response (DP-dRR)** and comparing it against naive edge-flipping and State-of-the-Art (SOTA) graph differential privacy baselines (like PrivGraph and DPGGAN).
+## Setup
 
-### Core Experiments
-
-- `privacy_release.py`: Original baseline evaluation script for synthetic graphs comparing naive edge-flipping against a calibrated double-edge swap mechanism.
-- `exp_v2.py`: Extended evaluation on synthetic graphs including hard negative attacker models and degree-preserving mechanisms.
-
-### SOTA Baselines
-
-- `external_baselines/`: Contains implementations and wrappers for state-of-the-art baselines like PrivGraph, PrivDPR, and DPGGAN.
-- `sota_dp_baselines.py`: Evaluation script integrating our metrics with SOTA differential privacy baselines.
-- `official_privgraph_eval.py`: Specific evaluation script comparing DP-dRR with the official PrivGraph mechanism.
-
-### Real-World Data Evaluation
-
-- `realdata_kit/`: A modular kit to evaluate mechanisms on real-world datasets (e.g., GrQc, EU Email, Facebook, Enron). Contains data loaders and a driver `run_realdata.py`.
-- `real_dpdrp_audit.py`: Specific script for auditing the DP-dRR mechanism on real-world graphs.
-- `make_figs_real.py`: Generates the figures comparing DP-dRR vs SOTA on real data.
-
-### Targeted Audits and Analytics
-
-- `operational_audit.py`: Computes runtime performance and memory overhead of the mechanisms.
-- `hard_negative_audit.py`: Evaluates mechanisms against advanced "hard negative" link-prediction attackers.
-- `degree_leakage.py`: Measures the vulnerability of node degrees under different perturbation strategies.
-- `theorem_gini.py`: Empirical validation of Gini impurity bounds under perturbation.
-
-### Novelty and Robustness Checks
-
-- `novelty_exp.py`, `novelty_v2_validation.py`: Experiments focused on the novelty aspects of DP-dRR.
-- `novelty_figs.py`: Visualizations for novelty experiments.
-- `swap_intensity_sweep.py`: Analyzes the impact of the number of edge swaps on structural utility and privacy.
-
-## Setup and Requirements
-
-The code is primarily written in Python 3. Core dependencies include:
-- `networkx`
-- `numpy`
-- `scipy`
-- `pandas`
-- `matplotlib`
-- `scikit-learn`
-
-To set up the environment, simply install the dependencies via pip. The `external_baselines` may have specific dependencies listed in their respective subdirectories.
-
-## Running Experiments
-
-Each script is designed to be self-contained for a specific audit or experiment. For instance, to reproduce the real-world dataset evaluation against SOTA baselines:
+Python 3.9+ with:
 
 ```bash
-cd realdata_kit
-python run_realdata.py
+pip install numpy scipy networkx scikit-learn pandas matplotlib
+pip install ogb          # only for the ogbl-collab real dataset
 ```
 
-Or to run the hard negative attacker audit:
+The state-of-the-art baselines in `external_baselines/` (PrivGraph, PrivDPR,
+DPGGAN) have their own dependencies — see the `README`/`requirements` inside each
+subfolder.
+
+## Layout
+
+- `graphs_cache_v2/` — pre-generated synthetic graphs (BA, WS, SBM, LFR; multiple
+  seeds) as pickles, so the synthetic experiments are deterministic and need no
+  network access.
+- `realdata_kit/` — real-network harness (`scipy.sparse`, scales to ≥10⁶ edges):
+  loaders, `kit_core.py`, driver `run_realdata.py`, and cached
+  `results_real_five.csv`. Datasets download to `realdata_kit/data/` on first use.
+- `external_baselines/` — third-party SOTA repos used for comparison (`.git`
+  history stripped).
+- `*.py` / `*.csv` — experiment scripts and their cached result tables (below).
+
+## Reproduction map
+
+Each script is self-contained and writes a CSV of raw metrics; the figure scripts
+read those CSVs. Run from this folder (except `run_realdata.py`).
+
+| Script | Output | Backs (paper) |
+|---|---|---|
+| `theorem_gini.py` | (stdout / cached generators) | Degree-channel identity, Theorem 1 validation tables |
+| `degree_leakage.py` | `degree_leakage.csv` | Degree-leakage curve / Lemma 1 |
+| `privacy_release.py` | `results.csv` | Original synthetic frontier (edge-flip vs swap) |
+| `exp_v2.py` | `results_v2_scaled.csv` | Extended synthetic frontier + hard negatives |
+| `hard_negative_audit.py` | `hard_negative_audit_dedup.csv`, `hard_negative_degree_only.csv` | Hard-negative collapse table |
+| `real_dpdrp_audit.py` | `real_dpdrp_audit.csv` | DP-DRP on real networks |
+| `sota_dp_baselines.py` | `sota_dp_baselines.csv` | SOTA comparison table |
+| `official_privgraph_eval.py` | `official_privgraph_eval.csv` | Official PrivGraph comparison |
+| `operational_audit.py` | `operational_audit.csv` | Runtime / scalability |
+| `swap_intensity_sweep.py` | `swap_intensity_sweep.csv` | Swap-intensity sweep |
+| `novelty_exp.py`, `novelty_v2_validation.py` | `novelty_v2_results.csv`, `novelty_*.csv` | Novelty validation |
+| `realdata_kit/run_realdata.py` | `realdata_kit/results_real_five.csv` | Five-network frontier |
+
+### Figures
+
+- `make_figs_real.py` → `fig_frontier_real.{pdf,png}`, `fig_attackers_real.{pdf,png}`
+  (reads `results_real_five.csv`, `hard_negative_audit_dedup.csv`,
+  `hard_negative_degree_only.csv`).
+- `novelty_figs.py` → `fig_novelty.pdf` (reads the `novelty_*.csv` result tables).
+
+## Quick start
 
 ```bash
+# real-network frontier (downloads/caches datasets on first run)
+cd realdata_kit && python run_realdata.py && cd ..
+
+# hard-negative audit + measured figures
 python hard_negative_audit.py
+python make_figs_real.py
 ```
-
-The scripts will generate CSV files (e.g., `real_dpdrp_audit.csv`, `hard_negative_audit_dedup.csv`) containing the raw metrics and performance indicators, which are then parsed by the figure generation scripts.
