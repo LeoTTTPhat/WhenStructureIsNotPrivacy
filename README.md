@@ -1,15 +1,16 @@
-# When Structure Is Not Privacy — Source Code
+# Degree-Channel Leakage in Privacy-Preserving Graph Data Publishing — Source Code
 
-Reproduction code and cached data for the paper *"When Structure Is Not Privacy:
-A Degree-Channel Audit and Regularized Defense for Graph Release"* (IEEE TNSE).
+Reproduction code and cached data for the paper *"Degree-Channel Leakage in
+Privacy-Preserving Graph Data Publishing"* (IEEE TKDE submission).
 
 The study audits how much link-privacy leaks through the **degree channel** of a
 released graph, and evaluates release mechanisms against that leakage: naive
 randomized response (edge-flip), a degree-preserving double-edge **swap**, the
 **TmF** regularized defense, and differentially private baselines (**dK-1 DP**,
-**dK-2 DP**), plus the DP-DRP composition. Everything is measured with four
-link-prediction attackers and a community-utility (NMI) metric on both synthetic
-generators and five real networks.
+**dK-2 DP**), recent DP synthesizer comparators, plus the DP-DRP composition.
+Everything is measured with a five-attacker suite (six for DP-DRP, including the
+learned-release attacker) and structural/community-utility metrics on both
+synthetic generators and five real networks.
 
 ## Setup
 
@@ -55,6 +56,7 @@ read those CSVs. Run from this folder (except `run_realdata.py`).
 | `swap_intensity_sweep.py` | `swap_intensity_sweep.csv` | Swap-intensity sweep |
 | `novelty_exp.py`, `novelty_v2_validation.py` | `novelty_v2_results.csv`, `novelty_*.csv` | Novelty validation |
 | `realdata_kit/run_realdata.py` | `realdata_kit/results_real_five.csv` | Five-network frontier |
+| `cap_sensitivity_audit.py` | `attacker_sample_sensitivity.csv` | Supplement Table S13 |
 
 ### Figures
 
